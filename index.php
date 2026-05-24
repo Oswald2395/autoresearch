@@ -19,16 +19,36 @@ header('X-Accel-Buffering: no');
 // =====================================================================
 // CONFIGURATION GLOBALE
 // =====================================================================
-$GLOBALS['api_keys'] = [
-    '5qaRTjWgfdsgfdggsgRake',
-    'o3rG1gfdsgfdsgfdsShytu',
-    'vEzgfdsgfdsgfdsgfduXkF'
-];
-$GLOBALS['endpoint']          = 'https://api.mistral.ai/v1/chat/completions';
+
+// Charger la configuration externe si elle existe (config.php avec les clés API)
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
+
+// Valeurs par défaut si config.php n'existe pas ou ne définit pas ces variables
+if (!isset($GLOBALS['api_keys'])) {
+    $GLOBALS['api_keys'] = [
+        // REMPLACEZ CES CLÉS PAR LES VÔTRES depuis https://console.mistral.ai/
+        getenv('MISTRAL_API_KEY') ?: 'VOTRE_CLE_API_MISTRAL_ICI',
+    ];
+}
+if (!isset($GLOBALS['endpoint'])) {
+    $GLOBALS['endpoint'] = 'https://api.mistral.ai/v1/chat/completions';
+}
+if (!isset($GLOBALS['db_file'])) {
+    $GLOBALS['db_file'] = __DIR__ . '/aether_memory.sqlite';
+}
+if (!isset($GLOBALS['apps_dir'])) {
+    $GLOBALS['apps_dir'] = __DIR__ . '/generated_apps';
+}
+if (!isset($GLOBALS['logs_dir'])) {
+    $GLOBALS['logs_dir'] = __DIR__ . '/logs';
+}
+if (!isset($GLOBALS['max_iterations'])) {
+    $GLOBALS['max_iterations'] = 20;
+}
+
 $GLOBALS['current_key_index'] = 0;
-$GLOBALS['db_file']           = __DIR__ . '/aether_memory.sqlite';
-$GLOBALS['apps_dir']          = __DIR__ . '/generated_apps';
-$GLOBALS['logs_dir']          = __DIR__ . '/logs';
 
 // =====================================================================
 // MODÈLES OPÉRATIONNELS (uniquement les "OK" vérifiés)
@@ -1102,7 +1122,7 @@ $base_url      = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'htt
 // ====================================================================
 // TRAITEMENT DES REQUÊTES POST
 // ====================================================================
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_input   = trim($_POST['user_input']   ?? '');
     $project_name = trim($_POST['project_name'] ?? '');
     $mode         = $_POST['mode']              ?? 'chat';
